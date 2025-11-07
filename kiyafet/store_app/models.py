@@ -13,3 +13,33 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.user_type}"
+    
+CATEGORIES = (
+    ("Kurti","Kurti"),
+    ("Short Kurti","Short Kurti"),
+    ("Top","Top"),
+    ("Salwar","Salwar"),
+    ("Churidar","Churidar"),
+    ("Saree","Saree"),
+)
+
+class Product(models.Model):
+    name = models.CharField(max_length=200)
+    category = models.CharField(max_length=50, choices=CATEGORIES)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField(blank=True, null=True)
+    cover_image = models.ImageField(upload_to="products/cover/")
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
+# Additional Gallery Images
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="products/gallery/")
+
+    def __str__(self):
+        return f"{self.product.name} Image"
