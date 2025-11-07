@@ -55,4 +55,10 @@ class LoginView(View):
         profile=UserProfile.objects.get(user=user)
         
         if profile.user_type=='customer':
-            return HttpResponse("customer_homr")
+            return HttpResponse("customer_home")
+        else:
+            return redirect("staff_home")
+        
+class StaffHomeView(View):
+    def get(self,request):
+        return render(request,"staff_home.html")

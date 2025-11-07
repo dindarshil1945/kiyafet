@@ -1,0 +1,223 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiyafet Staff Panel</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background: #f5f5f5;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: url("{% static 'staff_bg.png' %}") center/cover no-repeat;
+            backdrop-filter: blur(5px);
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding-top: 30px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sidebar .logo {
+            width: 130px;
+            margin-bottom: 25px;
+        }
+
+        .menu-links {
+            margin-top: 20px;
+            width: 100%;
+            padding: 0;
+        }
+
+        .menu-links li {
+            list-style: none;
+            width: 100%;
+        }
+
+        .menu-links a {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 26px;
+            color: white;
+            font-weight: 500;
+            font-size: 16px;
+            text-decoration: none;
+            transition: .3s ease;
+        }
+
+        .menu-links a:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-left: 4px solid #ffffff;
+            padding-left: 22px;
+        }
+
+        .menu-links i {
+            font-size: 18px;
+        }
+
+        /* Main content */
+        .main-content {
+            margin-left: 260px;
+            padding: 40px;
+        }
+
+        .page-title {
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            transition: .35s;
+            border-radius: 14px;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 40px;
+            background: #f7f8fa;
+            min-height: 100vh;
+        }
+
+        /* Page Title */
+        .page-title {
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        /* Welcome Box */
+        .welcome-box {
+            background: #dfe3e8;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 35px;
+            color: #333;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* Dashboard Stats Cards */
+        .stats-container {
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            width: 230px;
+            padding: 28px 0px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card i {
+            font-size: 30px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .stat-card h2 {
+            font-size: 22px;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .stat-card p {
+            color: #6c6c6c;
+            margin: 5px 0 0;
+            font-size: 13px;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <img src="{% static 'logo_white.png' %}" class="logo" alt="Logo">
+
+        <ul class="menu-links">
+            <li><a href="#"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+            <li><a href="#"><i class="bi bi-plus-square"></i> Add Products</a></li>
+            <li><a href="#"><i class="bi bi-box-seam"></i> Manage Products</a></li>
+            <li><a href="#"><i class="bi bi-clipboard-check"></i> Orders</a></li>
+            <li><a href=""><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+        <h1 class="page-title">Staff Dashboard</h1>
+
+        <div class="welcome-box">
+            Welcome, {{ request.user.username }} 👋
+        </div>
+
+        <div class="stats-container">
+
+            <div class="stat-card">
+                <i class="fas fa-box"></i>
+                <h2>120</h2>
+                <p>Products</p>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-shopping-bag"></i>
+                <h2>45</h2>
+                <p>Orders</p>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-users"></i>
+                <h2>87</h2>
+                <p>Customers</p>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-rupee-sign"></i>
+                <h2>₹56,200</h2>
+                <p>Revenue</p>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+</body>
+
+</html>
