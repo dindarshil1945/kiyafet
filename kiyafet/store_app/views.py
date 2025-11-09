@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from store_app.models import UserProfile,Product,ProductImage
 from django.http import HttpResponse
+from store_app.forms import ProductForm
 from django.contrib.auth import authenticate,login,logout
 
 class RegisterView(View):
@@ -131,3 +132,47 @@ class ManageProductView(View):
         products=Product.objects.all().order_by("-created_at")
         return render(request,"manage_products.html",{'products': products})
 
+class ProductEditView(View):
+    def get(self, request, *args, **kwargs):
+        product = get_object_or_404(Product, id=kwargs.get("id"))
+        form = ProductForm(instance=product)
+        images = ProductImage.objects.filter(product=product)
+        return render(request, "edit_product.html", {"form": form, "product": product, "images": images})
+
+    def post(self, request, *args, **kwargs):
+        product = get_object_or_404(Product, id=kwargs.get("id"))
+        form = ProductForm(request.POST, request.FILES, instance=product)
+
+        if form.is_valid():
+            form.save()
+
+            # Handle gallery images
+            gallery_images = request.FILES.getlist("gallery_images")
+            for img in gallery_images:
+                ProductImage.objects.create(product=product, image=img)
+
+            messages.success(request, f"✅ Product '{product.name}' updated successfully!")
+            return redirect("manage_products")
+
+        # If invalid, re-render form with errors
+        images = ProductImage.objects.filter(product=product)
+        return render(request, "edit_product.html", {"form": form, "product": product, "images": images})
+
+class DeleteProductImageView(View):
+    def get(self, request, id):
+        image = get_object_or_404(ProductImage, id=id)
+        product_id = image.product.id
+        image.delete()
+        messages.success(request, "Image deleted successfully.")
+        return redirect('edit_products', id=product_id)
+
+
+
+
+class DeleteProductView(View):
+    def get(self,request,*args, **kwargs):
+        product=Product.objects.get(id=kwargs.get("id"))
+        product.delete()
+        messages.info(request,"Product Removed Successfully")
+        return redirect("manage_products")
+        
