@@ -6,37 +6,63 @@ from store_app.models import UserProfile,Product,ProductImage
 from django.http import HttpResponse
 from store_app.forms import ProductForm
 from django.contrib.auth import authenticate,login,logout
+from django.core.mail import send_mail
+from django.conf import settings
+
 
 class RegisterView(View):
     def get(self, request):
         return render(request, "register.html")
-    
+
     def post(self, request):
-        username = request.POST.get("username").strip()
-        email = request.POST.get("email").strip()
+        username = request.POST.get("username", "").strip()
+        email = request.POST.get("email", "").strip()
         password = request.POST.get("password")
         confirm_password = request.POST.get("confirm_password")
 
+        # 🔹 Validation
         if password != confirm_password:
-            messages.error(request, "Passwords do not match")
-            return redirect("register")
+            messages.error(request, "⚠️ Passwords do not match.")
+            return render(request, "register.html")
 
         if User.objects.filter(email=email).exists():
-            messages.error(request, "Email already registered")
-            return redirect("register")
+            messages.error(request, "⚠️ This email is already registered.")
+            return render(request, "register.html")
 
         if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already taken")
-            return redirect("register")
+            messages.error(request, "⚠️ This username is already taken.")
+            return render(request, "register.html")
 
-        # ✅ Create normal user
-        user = User.objects.create_user(username=username, password=password, email=email)
+        try:
+            # ✅ Create user
+            user = User.objects.create_user(username=username, password=password, email=email)
+            UserProfile.objects.create(user=user, user_type="customer")
 
-        # ✅ Automatically create profile as CUSTOMER
-        UserProfile.objects.create(user=user, user_type="customer")
+            # 💌 Send Welcome Email
+            subject = "Welcome to Kiyafet – Where Elegance Begins"
+            message = (
+                f"Hi {username},\n\n"
+                "Thank you for joining Kiyafet — your destination for timeless elegance and handcrafted fashion.\n"
+                "We're thrilled to have you as part of our growing family.\n\n"
+                "Explore our latest collections and discover outfits designed to bring out your confidence and grace.\n\n"
+                "With love,\n"
+                "Team Kiyafet 🤍"
+            )
+            from_email = settings.EMAIL_HOST_USER
+            recipient_list = [email]
 
-        messages.success(request, "Account created successfully!")
-        return redirect("register")
+            try:
+                send_mail(subject, message, from_email, recipient_list)
+                messages.success(request, "✅ Account created successfully!")
+            except Exception:
+                messages.warning(request, "✅ Account created, but the welcome email could not be sent.")
+
+            return redirect("login")
+
+        except Exception as e:
+            messages.error(request, f"⚠️ Something went wrong during registration: {e}")
+            return render(request, "register.html")
+
 
 class LoginView(View):
     def get(self,request):
@@ -165,9 +191,7 @@ class DeleteProductImageView(View):
         image.delete()
         messages.success(request, "Image deleted successfully.")
         return redirect('edit_products', id=product_id)
-
-
-
+    
 
 class DeleteProductView(View):
     def get(self,request,*args, **kwargs):
@@ -176,3 +200,12 @@ class DeleteProductView(View):
         messages.info(request,"Product Removed Successfully")
         return redirect("manage_products")
         
+class CustomerHomePage(View):
+    def get(self,request):
+        return render(request,"customer_home.html")
+
+class LogoutView(View):
+    def get(self,request):
+        logout(request)
+        messages.success(request,"Logged Out Succesfully")
+        return redirect("login")

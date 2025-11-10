@@ -1,0 +1,229 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiyafet | Women Clothing Store</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #0d0b0c;
+            color: #f0f0f0;
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Navbar */
+        .navbar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 10;
+            background: transparent;
+            padding: 20px 40px;
+        }
+
+        .navbar-brand {
+            font-family: 'Playfair Display', serif;
+            color: #fff !important;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+
+        .nav-link {
+            color: #ccc !important;
+            font-weight: 400;
+            margin: 0 10px;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover {
+            color: #a00434 !important;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .hero-section video,
+        .hero-section img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            top: 0;
+            left: 0;
+            opacity: 0.9;
+            filter: brightness(70%);
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 8, 9, 0.5);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #fff;
+        }
+
+        .hero-content h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        .hero-content p {
+            font-size: 1rem;
+            margin: 15px 0 25px;
+            color: #e1e1e1;
+        }
+
+        .btn-shop {
+            border: 1px solid #a00434;
+            color: #fff;
+            background-color: transparent;
+            border-radius: 25px;
+            padding: 10px 30px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-shop:hover {
+            background-color: #7a002b;
+            border-color: #7a002b;
+        }
+
+        /* Featured section */
+        .featured-section {
+            background-color: #141213;
+            padding: 80px 0;
+        }
+
+        .section-title {
+            text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: #fff;
+            margin-bottom: 50px;
+        }
+
+        .product-card {
+            background: #1b1819;
+            border: none;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: scale(1.03);
+        }
+
+        .product-card img {
+            height: 280px;
+            width: 100%;
+            object-fit: cover;
+        }
+
+        .product-info {
+            padding: 15px;
+            text-align: center;
+        }
+
+        .product-info h5 {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .product-info .price {
+            color: #a00434;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        footer {
+            background-color: #0b090a;
+            text-align: center;
+            padding: 25px 0;
+            color: #999;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="#">Kiyafet</a>
+        <div class="ms-auto d-flex align-items-center">
+            <a href="#" class="nav-link">Shop</a>
+            <a href="#" class="nav-link">About</a>
+            <a href="#" class="nav-link">Contact</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section (video or image background) -->
+    <div class="hero-section">
+        <video autoplay muted loop playsinline>
+            <source src="{% static 'video/hero2.mp4' %}" type="video/mp4">
+        </video>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+            <h1>Discover Timeless Elegance</h1>
+            <p>Luxury women’s wear handcrafted with perfection.</p>
+            <a href="#" class="btn-shop">Shop Now</a>
+        </div>
+    </div>
+
+    <!-- Featured Products -->
+    <section class="featured-section">
+        <div class="container">
+            <h2 class="section-title">New Arrivals</h2>
+            <div class="row g-4">
+                {% for product in products|slice:":4" %}
+                <div class="col-md-3">
+                    <div class="card product-card">
+                        <img src="{{ product.cover_image.url }}" alt="{{ product.name }}">
+                        <div class="product-info">
+                            <h5>{{ product.name }}</h5>
+                            <p class="price">₹{{ product.price }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-muted">No products available yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        © 2025 Kiyafet. Crafted with passion
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
