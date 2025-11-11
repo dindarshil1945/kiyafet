@@ -202,7 +202,14 @@ class DeleteProductView(View):
         
 class CustomerHomePage(View):
     def get(self,request):
-        return render(request,"customer_home.html")
+        featured_products = Product.objects.all().order_by('-id')[:3]   # latest 3
+        new_arrivals = Product.objects.all().order_by('-created_at')[:8]  # latest 4
+
+        context = {
+            'featured_products': featured_products,
+            'new_arrivals': new_arrivals,
+        }
+        return render(request, 'customer_home.html', context)
 
 class LogoutView(View):
     def get(self,request):
