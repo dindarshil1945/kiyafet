@@ -1,0 +1,214 @@
+{% extends 'customer_base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} — Kiyafet{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="margin-top: 40px;">
+
+  <div class="row g-5 align-items-start">
+    <!-- LEFT: Product Images -->
+    <div class="col-lg-6">
+      <div class="position-relative">
+        <img id="mainImage" src="{{ product.cover_image.url }}" alt="{{ product.name }}"
+          class="img-fluid rounded shadow-sm w-100"
+          style="max-height: 630px; object-fit: cover; cursor: zoom-in;">
+      </div>
+
+      <!-- Scrollable Thumbnail Gallery -->
+      {% if product.images.all %}
+      <div class="d-flex gap-2 mt-3 overflow-auto pb-2" style="scrollbar-width: thin;">
+        {% for img in product.images.all %}
+        <img src="{{ img.image.url }}" alt="{{ product.name }}" class="img-thumbnail thumb-img"
+          style="width:100px; height:100px; object-fit:cover; cursor:pointer; border-radius:8px;">
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT: Product Details -->
+    <div class="col-lg-6">
+      <h3 class="fw-semibold mb-2" style="font-family:'Playfair Display',serif; color:var(--rose);">
+        {{ product.name }}
+      </h3>
+      <p class="text-muted mb-1">{{ product.category }}</p>
+      <h4 class="fw-bold mt-3" style="color: var(--rose);">₹{{ product.price }}</h4>
+
+      <p class="mt-3" style="line-height:1.8; color:#555;">{{ product.description }}</p>
+
+      <!-- Buttons -->
+      <form action="{% url 'add_to_cart' product.id %}" method="post" class="mt-4">
+  {% csrf_token %}
+  
+  <!-- Size Selector -->
+  <div class="mb-3">
+    <label class="form-label fw-semibold">Select Size:</label>
+    <div class="d-flex gap-2">
+      <input type="radio" class="btn-check" name="size" id="sizeS" value="S" required>
+      <label class="btn btn-outline-dark px-3 py-2 rounded-pill" for="sizeS">S</label>
+
+      <input type="radio" class="btn-check" name="size" id="sizeM" value="M">
+      <label class="btn btn-outline-dark px-3 py-2 rounded-pill" for="sizeM">M</label>
+
+      <input type="radio" class="btn-check" name="size" id="sizeL" value="L">
+      <label class="btn btn-outline-dark px-3 py-2 rounded-pill" for="sizeL">L</label>
+
+      <input type="radio" class="btn-check" name="size" id="sizeXL" value="XL">
+      <label class="btn btn-outline-dark px-3 py-2 rounded-pill" for="sizeXL">XL</label>
+    </div>
+  </div>
+
+  <!-- Add to Cart Button -->
+  <button type="submit" class="btn btn-dark px-4 py-2 rounded-pill">
+    <i class="bi bi-cart-plus me-2"></i> Add to Cart
+  </button>
+</form>
+
+
+      <!-- Additional info -->
+      <div class="mt-5 pt-4 border-top">
+        <h6 class="fw-semibold mb-2" style="color: var(--rose);">Why Kiyafet?</h6>
+        <ul class="list-unstyled text-muted small">
+          <li><i class="bi bi-check-circle me-2 text-success"></i> Handcrafted with premium fabrics</li>
+          <li><i class="bi bi-check-circle me-2 text-success"></i> Muted luxury inspired by Indian artistry</li>
+          <li><i class="bi bi-check-circle me-2 text-success"></i> Easy 7-day exchange</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Products -->
+  {% if related_products %}
+  <div class="mt-5 pt-5 border-top">
+    <div class="text-center mb-4">
+      <h3 class="section-title" style="font-size:1.6rem;">You May Also Like</h3>
+      <p class="text-muted" style="font-size:0.95rem;">Discover pieces similar to your choice.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+      {% for item in related_products %}
+      <div class="col-6 col-md-3 col-lg-3 d-flex">
+        <div class="card-ghost w-100 position-relative overflow-hidden" style="border-radius:12px; cursor:pointer;">
+          <div class="position-relative overflow-hidden">
+            <img src="{{ item.cover_image.url }}" alt="{{ item.name }}" 
+                 class="product-img w-100" 
+                 style="height:280px; object-fit:cover; transition: transform 0.5s ease;">
+            
+            <!-- Overlay with button -->
+            <div class="overlay d-flex align-items-center justify-content-center">
+              <a href="{% url 'product_detail_view' item.id %}" 
+                 class="view-btn">
+                 View Details
+              </a>
+            </div>
+          </div>
+
+          <div class="product-body text-center p-3">
+            <h6 style="font-size:0.95rem; font-weight:600;">{{ item.name }}</h6>
+            <p class="text-muted mb-1" style="font-size:0.85rem;">{{ item.category }}</p>
+            <div class="price" style="font-size:0.95rem; color:var(--rose); font-weight:700;">₹{{ item.price }}</div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- Zoom Modal -->
+<div class="modal fade" id="imageZoomModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 bg-transparent">
+      <div class="modal-body text-center p-0">
+        <img id="zoomedImage" src="" alt="Zoomed Image" class="img-fluid rounded" style="max-height:90vh; object-fit:contain;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* ---------- Related Product Hover Effects ---------- */
+
+  .card-ghost {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card-ghost:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+  }
+
+  .card-ghost .overlay {
+    opacity: 0;
+    background: rgba(122, 0, 43, 0.35);
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.4s ease;
+  }
+
+  .card-ghost:hover .overlay {
+    opacity: 1;
+  }
+
+  .card-ghost .product-img {
+    transition: transform 0.5s ease;
+  }
+
+  .card-ghost:hover .product-img {
+    transform: scale(1.08);
+  }
+
+  .view-btn {
+    background: var(--rose);
+    color: #fff !important;
+    font-size: 0.9rem;
+    padding: 10px 22px;
+    border-radius: 30px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .view-btn:hover {
+    background: #52001e;
+    transform: translateY(-2px);
+  }
+  .btn-check:checked + .btn-outline-dark {
+  background-color: var(--rose);
+  color: white;
+  border-color: var(--rose);
+}
+
+.btn-outline-dark:hover {
+  background-color: var(--rose);
+  color: white;
+  border-color: var(--rose);
+}
+
+</style>
+
+<script>
+  // Thumbnail click - change main image
+  document.addEventListener("DOMContentLoaded", function () {
+    const mainImage = document.getElementById("mainImage");
+    const thumbnails = document.querySelectorAll(".thumb-img");
+
+    thumbnails.forEach(thumb => {
+      thumb.addEventListener("click", function () {
+        mainImage.src = this.src;
+      });
+    });
+
+    // Zoom modal functionality
+    mainImage.addEventListener("click", function () {
+      const zoomModal = new bootstrap.Modal(document.getElementById("imageZoomModal"));
+      document.getElementById("zoomedImage").src = this.src;
+      zoomModal.show();
+    });
+  });
+</script>
+{% endblock %}

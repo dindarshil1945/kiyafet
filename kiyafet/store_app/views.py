@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect,get_object_or_404
 from django.views import View
 from django.contrib.auth.models import User
 from django.contrib import messages
-from store_app.models import UserProfile,Product,ProductImage
+from store_app.models import UserProfile,Product,ProductImage,CartItem
 from django.http import HttpResponse
 from store_app.forms import ProductForm
 from django.contrib.auth import authenticate,login,logout
@@ -82,7 +82,8 @@ class LoginView(View):
         profile=UserProfile.objects.get(user=user)
         
         if profile.user_type=='customer':
-            return HttpResponse("customer_home")
+            messages.success(request,"Logged In Succesfully")
+            return redirect("home")
         else:
             return redirect("staff_home")
         
@@ -210,9 +211,90 @@ class CustomerHomePage(View):
             'new_arrivals': new_arrivals,
         }
         return render(request, 'customer_home.html', context)
+    
+class ProductDetailView(View):
+    def get(self,request,*args, **kwargs):
+        product=Product.objects.get(id=kwargs.get("id"))
+        related_products = Product.objects.filter(category=product.category).exclude(id=product.id)[:4]
+        return render(request,"product_detail.html",{"product":product,"related_products":related_products})
+
+
+
+class AddToCartView(View):
+    def post(self, request, **kwargs):
+        if not request.user.is_authenticated:
+            messages.warning(request, "Please login to add products to your cart.")
+            return redirect('login')
+
+        product = Product.objects.get(id=kwargs.get("id"))
+        size = request.POST.get("size", "M")  # default M if not selected
+
+        cart_item, created = CartItem.objects.get_or_create(
+            user=request.user,
+            product=product,
+            size=size  # Include size when checking for duplicates
+        )
+
+        if not created:
+            cart_item.quantity += 1
+            cart_item.save()
+            messages.success(request, f"Updated quantity for {product.name} ({size}).")
+        else:
+            messages.success(request, f"Added {product.name} ({size}) to your cart.")
+
+        return redirect("product_detail_view", id=product.id)
+
+
+class CartView(View):
+    def get(self, request, **kwargs):
+        # If user is not logged in, show a message + login button
+        if not request.user.is_authenticated:
+            context = {"not_logged_in": True}
+            return render(request, "cart.html", context)
+
+        # Get all cart items for the logged-in user
+        cart_items = CartItem.objects.filter(user=request.user)
+
+        # Calculate total price
+        total = sum(item.product.price * item.quantity for item in cart_items)
+
+        context = {
+            "cart_items": cart_items,
+            "total": total,
+            "not_logged_in": False,
+        }
+        return render(request, "cart.html", context)
+
+class IncreaseCartItemView(View):
+    def get(self, request, id):
+        item = CartItem.objects.get(id=id, user=request.user)
+        item.quantity += 1
+        item.save()
+        return redirect('cart_view')
+
+
+class DecreaseCartItemView(View):
+    def get(self, request, id):
+        item = CartItem.objects.get(id=id, user=request.user)
+        if item.quantity > 1:
+            item.quantity -= 1
+            item.save()
+        else:
+            item.delete()
+        return redirect('cart_view')
+
+
+class RemoveCartItemView(View):
+    def get(self, request, id):
+        item = CartItem.objects.get(id=id, user=request.user)
+        item.delete()
+        messages.success(request, "Item removed from your cart.")
+        return redirect('cart_view')
+
+
 
 class LogoutView(View):
     def get(self,request):
         logout(request)
         messages.success(request,"Logged Out Succesfully")
-        return redirect("login")
+        return redirect("home")

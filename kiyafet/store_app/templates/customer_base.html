@@ -1,0 +1,367 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Kiyafet — Muted Luxury{% endblock %}</title>
+
+    <!-- Fonts & Icons -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Poppins:wght@300;400;500&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-light: #f8f5f5;
+            --panel: #fff;
+            --rose: #7a002b;
+            --accent: #b49782;
+            --ink: #1b1b1b;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background: var(--bg-light);
+            font-family: 'Poppins', sans-serif;
+            color: var(--ink);
+        }
+
+        main {
+            flex: 1;
+            padding-top: 100px;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            transition: all 0.35s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+        }
+
+        .nav-link {
+            color: #333 !important;
+            font-weight: 500;
+        }
+
+        .nav-link:hover {
+            color: var(--rose) !important;
+        }
+
+        .icon-btn {
+            font-size: 1.3rem;
+            color: #333;
+            margin-left: 10px;
+            transition: color 0.3s;
+        }
+
+        .icon-btn:hover {
+            color: var(--rose);
+        }
+
+        /* Dropdown styling */
+        .dropdown-menu {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .dropdown-item {
+            font-size: 0.95rem;
+            color: #333;
+            transition: all 0.25s ease;
+            border-radius: 6px;
+            padding: 8px 14px;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(122, 0, 43, 0.06);
+            color: var(--rose);
+        }
+
+        /* Footer */
+        footer {
+            background: #fff;
+            padding: 50px 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            color: #555;
+            margin-top: auto;
+            /* Ensures footer stays at bottom */
+        }
+
+        footer a {
+            color: var(--rose);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Toast */
+        .toast {
+            background: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(10px);
+            font-size: 0.95rem;
+            border-left: 4px solid var(--rose);
+            border-radius: 10px;
+        }
+
+        .toast-body {
+            color: #333;
+        }
+
+        .modal-content {
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            border-radius: 14px;
+        }
+
+        .card-ghost:hover .overlay {
+            opacity: 1;
+        }
+
+        .card-ghost:hover .product-img {
+            transform: scale(1.05);
+        }
+
+        .card-ghost .overlay a {
+            background: var(--rose);
+            color: #fff !important;
+            font-size: 0.9rem;
+            padding: 10px 22px;
+            border-radius: 30px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .card-ghost .overlay a:hover {
+            background: #52001e;
+        }
+
+        .badge {
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            font-weight: 500;
+            padding: 3px 6px;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: 11px;
+            right: -1px;
+            background-color: var(--rose);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 600;
+            border-radius: 50%;
+            padding: 2px 5px;
+            min-width: 16px;
+            text-align: center;
+            line-height: 1.1;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAV -->
+    <nav class="navbar navbar-expand-lg fixed-top py-3">
+        <div class="container d-flex align-items-center justify-content-between">
+
+            <!-- Logo -->
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <img src="{% static 'logo.png' %}" alt="Kiyafet" style="height:45px;">
+            </a>
+
+            <!-- Toggler -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <i class="bi bi-list" style="font-size:1.6rem; color:var(--rose);"></i>
+            </button>
+
+            <!-- Menu -->
+            <div class="collapse navbar-collapse justify-content-end" id="navMenu">
+                <ul class="navbar-nav align-items-center gap-3">
+                    <!-- Account Dropdown -->
+                    <li class="nav-item dropdown position-relative">
+                        <a href="#" class="nav-link d-flex align-items-center gap-1 dropdown-toggle"
+                            id="accountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person" style="font-size:1.3rem;"></i>
+                            {% if user.is_authenticated %}
+                            <span class="d-none d-lg-inline fw-medium">{{ request.user.username }}</span>
+                            {% else %}
+                            <span class="d-none d-lg-inline fw-medium">Account</span>
+                            {% endif %}
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i
+                                        class="bi bi-person-circle text-muted"></i> Profile</a></li>
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i
+                                        class="bi bi-bag-check text-muted"></i> Orders</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+
+                            {% if user.is_authenticated %}
+                            <li><a class="dropdown-item d-flex align-items-center gap-2 text-danger logout-btn"
+                                    href="#"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                            {% else %}
+                            <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'login' %}"><i
+                                        class="bi bi-box-arrow-in-right text-muted"></i> Login</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+
+                    <li class="nav-item position-relative">
+                        <a href="{% url 'cart_view' %}" class="nav-link position-relative d-inline-block"
+                            style="padding: 0 5px;">
+                            <i class="bi bi-bag" style="font-size:1.4rem; line-height:1;"></i>
+
+                            <span class="cart-badge">
+                                {% if user.is_authenticated %}
+                                {{ cart_item_count|default:0 }}
+                                {% else %}
+                                0
+                                {% endif %}
+                            </span>
+                        </a>
+                    </li>
+
+
+
+
+                    <!-- Search -->
+                    <li class="nav-item">
+                        <a href="#" class="nav-link"><i class="bi bi-search" style="font-size:1.3rem;"></i></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="row align-items-center text-center text-md-start g-4">
+                <!-- Left -->
+                <div class="col-md-4">
+                    <div class="d-flex flex-column align-items-center align-items-md-start">
+                        <img src="{% static 'logo.png' %}" alt="Kiyafet Logo" style="height:65px; margin-bottom:10px;">
+                        <p class="text-muted mb-0" style="max-width:280px; font-size:0.95rem;">
+                            Handcrafted elegance for the modern woman.<br>Quiet luxury, crafted responsibly.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Center: Social Icons -->
+                <div class="col-md-4 text-center">
+                    <div class="d-flex justify-content-center gap-3 fs-5">
+                        <a href="https://www.instagram.com/kiyafet.__?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                            class="text-muted"><i class="bi bi-instagram"></i></a>
+                        <a href="https://wa.me/919074177334" target="_blank" class="text-muted"><i
+                                class="bi bi-whatsapp"></i></a>
+                        <a href="#" class="text-muted"><i class="bi bi-twitter"></i></a>
+                    </div>
+                </div>
+
+
+                <!-- Right: Contact & Rights -->
+                <div class="col-md-4 text-center text-md-end">
+                    <small class="d-block mb-1">
+                        <a href="mailto:kiyafetclothing@gmail.com" class="text-muted text-decoration-none">
+                            kiyafetclothing@gmail.com
+                        </a>
+                    </small>
+                    <small class="d-block mb-3">
+                        <a href="tel:+919074177334" class="text-muted text-decoration-none">
+                            +91 90741 77334
+                        </a>
+                    </small>
+                    <small class="text-muted">© 2025 Kiyafet. All Rights Reserved.</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Django Messages Toast -->
+    {% if messages %}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+        {% for message in messages %}
+        <div class="toast show mb-2 shadow-sm" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">
+                    {% if message.tags == "success" %}
+                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                    {% elif message.tags == "error" %}
+                    <i class="bi bi-exclamation-circle-fill text-danger me-2"></i>
+                    {% elif message.tags == "warning" %}
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                    {% else %}
+                    <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                    {% endif %}
+                    {{ message }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0">
+                <div class="modal-body text-center p-5">
+                    <i class="bi bi-box-arrow-right" style="font-size: 3rem; color: var(--rose);"></i>
+                    <h5 class="mt-3" style="font-family:'Playfair Display',serif; color:var(--rose);">Confirm Logout
+                    </h5>
+                    <p class="text-muted mb-4">Are you sure you want to log out from your account?</p>
+                    <div class="d-flex justify-content-center gap-3">
+                        <button type="button" class="btn btn-outline-secondary px-4"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <a href="{% url 'logout' %}" class="btn px-4"
+                            style="background: var(--rose); color: #fff;">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const logoutBtn = document.querySelector(".logout-btn");
+            if (logoutBtn) {
+                logoutBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const logoutModal = new bootstrap.Modal(document.getElementById("logoutConfirmModal"));
+                    logoutModal.show();
+                });
+            }
+
+            // Auto-show toasts
+            document.querySelectorAll('.toast').forEach(t => new bootstrap.Toast(t, { delay: 4000 }).show());
+        });
+    </script>
+</body>
+
+</html>

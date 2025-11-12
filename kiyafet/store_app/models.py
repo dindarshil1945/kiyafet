@@ -43,3 +43,22 @@ class ProductImage(models.Model):
 
     def __str__(self):
         return f"{self.product.name} Image"
+    
+class CartItem(models.Model):
+    SIZE_CHOICES = [
+        ("S", "S"),
+        ("M", "M"),
+        ("L", "L"),
+        ("XL", "XL"),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    size = models.CharField(max_length=5, choices=SIZE_CHOICES, default="M")
+    quantity = models.PositiveIntegerField(default=1)
+
+    def subtotal(self):
+        return self.product.price * self.quantity
+
+    def __str__(self):
+        return f"{self.product.name} ({self.size}) x {self.quantity}"
