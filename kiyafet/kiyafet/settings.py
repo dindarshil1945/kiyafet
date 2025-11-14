@@ -129,3 +129,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'kiyafetclothing@gmail.com'
+EMAIL_HOST_PASSWORD = 'tzyvixnwukreyktp'  
+
+RAZORPAY_KEY_ID="rzp_test_RZC0KXjib71WdA"
+RAZORPAY_KEY_SECRET="xS4Y26grX2gJy2P3Zu3KWbeb"
