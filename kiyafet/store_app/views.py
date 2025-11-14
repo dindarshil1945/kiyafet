@@ -3,7 +3,7 @@ from django.views import View
 from django.contrib.auth.models import User
 from django.contrib import messages
 from store_app.models import UserProfile,Product,ProductImage,CartItem,Address,Order,OrderItem
-from django.http import HttpResponse
+from django.http import HttpResponse,HttpResponseBadRequest
 from store_app.forms import ProductForm
 from django.contrib.auth import authenticate,login,logout
 from django.core.mail import send_mail
@@ -12,6 +12,8 @@ import razorpay
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
+
+#-----------------------------------------------------Register and login---------------------------------------------------------------
 
 class RegisterView(View):
     def get(self, request):
@@ -23,7 +25,7 @@ class RegisterView(View):
         password = request.POST.get("password")
         confirm_password = request.POST.get("confirm_password")
 
-        # 🔹 Validation
+        #  Validation
         if password != confirm_password:
             messages.error(request, "⚠️ Passwords do not match.")
             return render(request, "register.html")
@@ -37,11 +39,11 @@ class RegisterView(View):
             return render(request, "register.html")
 
         try:
-            # ✅ Create user
+            #  Create user
             user = User.objects.create_user(username=username, password=password, email=email)
             UserProfile.objects.create(user=user, user_type="customer")
 
-            # 💌 Send Welcome Email
+            #  Send Welcome Email
             subject = "Welcome to Kiyafet – Where Elegance Begins"
             message = (
                 f"Hi {username},\n\n"
@@ -89,6 +91,8 @@ class LoginView(View):
             return redirect("home")
         else:
             return redirect("staff_home")
+
+#---------------------------------------------Staff Home and Dashboard----------------------------------------------------------------
         
 class StaffHomeView(View):
     def get(self,request):
@@ -270,7 +274,7 @@ class DeleteOrderView(View):
 
         return redirect("staff_orders")
 
-
+#--------------------------------------------------------------Customer Product and Home---------------------------------------------------------------------
         
 class CustomerHomePage(View):
     def get(self,request):
@@ -289,7 +293,7 @@ class ProductDetailView(View):
         related_products = Product.objects.filter(category=product.category).exclude(id=product.id)[:4]
         return render(request,"product_detail.html",{"product":product,"related_products":related_products})
 
-
+#----------------------------------------------------------Add To Cart------------------------------------------------------------------------------
 
 class AddToCartView(View):
     def post(self, request, **kwargs):
@@ -362,6 +366,8 @@ class RemoveCartItemView(View):
         messages.success(request, "Item removed from your cart.")
         return redirect('cart_view')
 
+#----------------------------------------------------User Profile and Address -----------------------------------------------------------------------------------------
+
 class ProfileView(View):
     def get(self, request):
         
@@ -400,11 +406,7 @@ class EditProfileView(View):
         return redirect("profile")
 
 
-class LogoutView(View):
-    def get(self,request):
-        logout(request)
-        messages.success(request,"Logged Out Succesfully")
-        return redirect("home")
+
 
 class AddAddressView(View):
     def get(self, request):
@@ -465,6 +467,8 @@ class DeleteAddressView(View):
         messages.success(request, "Address deleted successfully!")
         return redirect("profile")
 
+
+#-----------------------------------------------------------Check Out and Payment------------------------------------------------------------------------------------------
 
 class CheckoutView(View):
     def get(self, request):
@@ -603,6 +607,8 @@ class PaymentConfirmView(View):
     def get(self, request):
         return redirect("home")
 
+#--------------------------------------------------User Order Page----------------------------------------------------------------------------------
+
 class OrdersListView(View):
     def get(self, request):
         if not request.user.is_authenticated:
@@ -622,3 +628,9 @@ class OrderDetailView(View):
             "order": order,
             "items": order_items,
         })
+
+class LogoutView(View):
+    def get(self,request):
+        logout(request)
+        messages.success(request,"Logged Out Succesfully")
+        return redirect("home")
