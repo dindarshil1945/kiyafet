@@ -2,12 +2,15 @@ from django.shortcuts import render, redirect,get_object_or_404
 from django.views import View
 from django.contrib.auth.models import User
 from django.contrib import messages
-from store_app.models import UserProfile,Product,ProductImage,CartItem,Address
+from store_app.models import UserProfile,Product,ProductImage,CartItem,Address,Order,OrderItem
 from django.http import HttpResponse
 from store_app.forms import ProductForm
 from django.contrib.auth import authenticate,login,logout
 from django.core.mail import send_mail
 from django.conf import settings
+import razorpay
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 
 class RegisterView(View):
@@ -200,6 +203,74 @@ class DeleteProductView(View):
         product.delete()
         messages.info(request,"Product Removed Successfully")
         return redirect("manage_products")
+    
+class StaffOrderListView(View):
+    def get(self, request):
+        # Check login + staff
+        if not request.user.is_authenticated:
+            return redirect("login")
+
+        user_profile = getattr(request.user, "userprofile", None)
+        if not user_profile or user_profile.user_type != "staff":
+            return redirect("login")
+
+        orders = Order.objects.all().order_by("-created_at")
+
+        return render(request, "staff_orders_list.html", {"orders": orders})
+
+class StaffOrderDetailView(View):
+    def get(self, request, order_id):
+        if not request.user.is_authenticated:
+            return redirect("login")
+
+        user_profile = getattr(request.user, "userprofile", None)
+        if not user_profile or user_profile.user_type != "staff":
+            return redirect("login")
+
+        order = get_object_or_404(Order, id=order_id)
+        items = OrderItem.objects.filter(order=order)
+
+        return render(request, "staff_order_detail.html", {
+            "order": order,
+            "items": items
+        })
+
+class UpdateOrderView(View):
+    def post(self, request, order_id):
+
+        order = get_object_or_404(Order, id=order_id)
+
+        order.status = request.POST.get("status")
+        order.tracking_id = request.POST.get("tracking_id")
+        order.courier_name = request.POST.get("courier_name")
+
+        order.save()
+        messages.success(request, "Order updated successfully!")
+
+        return redirect("staff_orders")
+    
+class DeleteOrderView(View):
+    def post(self, request, id):
+
+        # Only staff can delete
+        user_profile = getattr(request.user, "userprofile", None)
+        if not user_profile or user_profile.user_type != "staff":
+            messages.error(request, "Permission denied.")
+            return redirect("staff_home")
+
+        order = get_object_or_404(Order, id=id)
+
+        # Only allow delete if payment failed or pending
+        if order.payment_status.lower() not in ["pending", "failed"]:
+            messages.error(request, "You cannot delete a paid order!")
+            return redirect("manage_orders")
+
+        order.delete()
+        messages.success(request, f"Order #{id} deleted successfully.")
+
+        return redirect("staff_orders")
+
+
         
 class CustomerHomePage(View):
     def get(self,request):
@@ -393,3 +464,161 @@ class DeleteAddressView(View):
         address.delete()
         messages.success(request, "Address deleted successfully!")
         return redirect("profile")
+
+
+class CheckoutView(View):
+    def get(self, request):
+        if not request.user.is_authenticated:
+            messages.warning(request, "Please login to continue checkout.")
+            return redirect("login")
+
+        cart_items = CartItem.objects.filter(user=request.user)
+
+        if not cart_items.exists():
+            messages.warning(request, "Your cart is empty.")
+            return redirect("cart_view")
+
+        addresses = Address.objects.filter(user=request.user)
+        total = sum(item.product.price * item.quantity for item in cart_items)
+
+        return render(request, "checkout.html", {
+            "cart_items": cart_items,
+            "addresses": addresses,
+            "total": total
+        })
+
+class StartPaymentView(View):
+    def post(self, request):
+        address_id = request.POST.get("address")
+        amount = float(request.POST.get("amount"))
+
+        # Validate address belongs to user
+        try:
+            address = Address.objects.get(id=address_id, user=request.user)
+        except Address.DoesNotExist:
+            messages.error(request, "Address not found or not allowed.")
+            return redirect("checkout_view")
+
+        # Get the user's cart
+        cart_items = CartItem.objects.filter(user=request.user)
+
+        if not cart_items.exists():
+            messages.error(request, "Your cart is empty.")
+            return redirect("cart_view")
+
+        total = sum(item.product.price * item.quantity for item in cart_items)
+
+        # Create Order
+        order = Order.objects.create(
+            user=request.user,
+            address=address,
+            full_name=address.full_name,
+            phone=address.phone,
+            total_amount=total,
+            payment_status="Pending",
+        )
+
+        # Create Order Items
+        for item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                product=item.product,
+                size=item.size,
+                quantity=item.quantity,
+                price=item.product.price,
+            )
+
+        # redirect to razorpay:
+        return redirect("razorpay_pay", order_id=order.id)
+
+class RazorpayPayView(View):
+    def get(self, request, order_id):
+        order = Order.objects.get(id=order_id)
+
+        # Razorpay client
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+        payment = client.order.create({
+            "amount": int(order.total_amount * 100),  # convert to paisa
+            "currency": "INR",
+            "payment_capture": 1
+        })
+
+        order.payment_id = payment["id"]
+        order.save()
+
+        return render(request, "razorpay_payment.html", {
+            "order": order,
+            "payment": payment,
+            "razorpay_key": settings.RAZORPAY_KEY_ID,
+        })
+
+@method_decorator(csrf_exempt, name='dispatch')
+class PaymentConfirmView(View):
+    def post(self, request, *args, **kwargs):
+
+        # Razorpay response fields
+        razorpay_payment_id = request.POST.get('razorpay_payment_id')
+        razorpay_order_id = request.POST.get('razorpay_order_id')
+        razorpay_signature = request.POST.get('razorpay_signature')
+
+        order_id = request.GET.get("order_id")
+
+        if not (razorpay_payment_id and razorpay_order_id and razorpay_signature):
+            return HttpResponseBadRequest("Payment verification failed.")
+
+        # Find your order
+        try:
+            order = Order.objects.get(id=order_id, user=request.user)
+        except Order.DoesNotExist:
+            messages.error(request, "Order not found.")
+            return redirect("cart_view")
+
+        # Razorpay client for verification
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+        # Verify payment signature
+        try:
+            client.utility.verify_payment_signature({
+                'razorpay_order_id': razorpay_order_id,
+                'razorpay_payment_id': razorpay_payment_id,
+                'razorpay_signature': razorpay_signature
+            })
+        except:
+            messages.error(request, "Payment verification failed.")
+            return redirect("cart_view")
+
+        # SUCCESS → Update order
+        order.payment_status = "Paid"
+        order.payment_id = razorpay_payment_id
+        order.status = "confirmed"
+        order.save()
+
+        # Clear cart after payment
+        CartItem.objects.filter(user=request.user).delete()
+
+        return render(request, "payment_success.html", {"order": order})
+
+    # Razorpay sometimes sends GET request — handle safely
+    def get(self, request):
+        return redirect("home")
+
+class OrdersListView(View):
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return render(request,"login_required.html")
+        
+        orders = Order.objects.filter(user=request.user).order_by("-created_at")
+        return render(request, "orders_list.html", {"orders": orders})
+
+class OrderDetailView(View):
+    def get(self, request, order_id):
+        # Validate order belongs to the logged-in user
+        order = get_object_or_404(Order, id=order_id, user=request.user)
+
+        order_items = order.orderitem_set.all()
+
+        return render(request, "order_detail.html", {
+            "order": order,
+            "items": order_items,
+        })

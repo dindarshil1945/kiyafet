@@ -1,8 +1,9 @@
 from django.contrib import admin
-from store_app.models import UserProfile,Product,ProductImage,CartItem
+from store_app.models import UserProfile,Product,ProductImage,CartItem,Order
 
 # Register your models here.
 admin.site.register(UserProfile)
 admin.site.register(Product)
 admin.site.register(ProductImage)
 admin.site.register(CartItem)
+admin.site.register(Order)

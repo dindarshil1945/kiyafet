@@ -30,6 +30,12 @@ urlpatterns = [
     path('staff/product/delete/<int:id>', views.DeleteProductView.as_view(),name="delete_products"),
     path('staff/product/edit/<int:id>', views.ProductEditView.as_view(),name="edit_products"),
     path('staff/product/image/delete/<int:id>/', views.DeleteProductImageView.as_view(), name='delete_product_image'),
+    path("staff/orders/", views.StaffOrderListView.as_view(), name="staff_orders"),
+    path("staff/orders/<int:order_id>/", views.StaffOrderDetailView.as_view(), name="staff_order_detail"),
+    path("staff/orders/<int:order_id>/update/", views.UpdateOrderView.as_view(), name="update_order"),
+    path("staff/order/delete/<int:id>/", views.DeleteOrderView.as_view(), name="delete_order"),
+
+
     path('', views.CustomerHomePage.as_view(), name='home'),
     path('product/view/<int:id>', views.ProductDetailView.as_view(), name='product_detail_view'),
     path('cart/add/<int:id>',views.AddToCartView.as_view(), name='add_to_cart'),
@@ -42,5 +48,12 @@ urlpatterns = [
     path("address/add/", views.AddAddressView.as_view(), name="add_address"),
     path("address/edit/<int:id>/", views.EditAddressView.as_view(), name="edit_address"),
     path("address/delete/<int:id>/", views.DeleteAddressView.as_view(), name="delete_address"),
+    path("checkout/", views.CheckoutView.as_view(), name="checkout_view"),
+    path("start-payment/", views.StartPaymentView.as_view(), name="start_payment"),
+    path("razorpay/pay/<int:order_id>/", views.RazorpayPayView.as_view(), name="razorpay_pay"),
+    path("confirm/", views.PaymentConfirmView.as_view(), name="payment_confirm"),
+    path("my-orders/", views.OrdersListView.as_view(), name="orders_list"),
+    path("order/<int:order_id>/", views.OrderDetailView.as_view(), name="order_detail"),
+
     path('logout', views.LogoutView.as_view(), name='logout'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

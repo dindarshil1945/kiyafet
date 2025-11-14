@@ -1,0 +1,132 @@
+{% extends 'customer_base.html' %}
+
+{% block title %}Complete Your Payment — Kiyafet{% endblock %}
+
+{% block content %}
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .payment-wrapper {
+        max-width: 450px;
+        margin: 60px auto;
+        background: #fff;
+        padding: 40px 30px;
+        border-radius: 16px;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+        text-align: center;
+    }
+
+    .payment-wrapper h2 {
+        font-weight: 600;
+        font-size: 24px;
+        margin-bottom: 10px;
+        color: #222;
+    }
+
+    .payment-wrapper p {
+        color: #555;
+        font-size: 15px;
+        margin-bottom: 25px;
+    }
+
+    #rzp-button1 {
+        width: 100%;
+        padding: 14px 20px;
+        background: #8C0032;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #fff;
+        cursor: pointer;
+        transition: background .3s ease;
+    }
+
+    #rzp-button1:hover {
+        background: #a7063e;
+    }
+
+    .amount-box {
+        font-size: 20px;
+        font-weight: 600;
+        color: #000;
+        margin-bottom: 20px;
+    }
+
+    /* Loader */
+    #loading {
+        display: none;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #444;
+    }
+
+    #loading span {
+        display: inline-block;
+        animation: blink 1.2s infinite;
+    }
+
+    @keyframes blink {
+        0% { opacity: 0.2; }
+        50% { opacity: 1; }
+        100% { opacity: 0.2; }
+    }
+</style>
+
+<div class="payment-wrapper">
+
+    <h2>Complete Your Payment</h2>
+    <p>Your order is almost done! Click below to pay securely.</p>
+
+    <div class="amount-box">
+        Amount: ₹{{ order.total_amount }}
+    </div>
+
+    <button id="rzp-button1">Pay Now</button>
+
+    <div id="loading">
+        Processing <span>•</span><span>•</span><span>•</span>
+    </div>
+
+</div>
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+var options = {
+    "key": "{{ razorpay_key }}",
+    "amount": "{{ payment.amount }}",
+    "currency": "INR",
+
+    "name": "Kiyafet Clothing",
+    "description": "Order #{{ order.id }}",
+    "image": "https://your-image-link.com/logo.png",
+
+    "order_id": "{{ payment.id }}",
+
+    "callback_url": "{% url 'payment_confirm' %}?order_id={{ order.id }}",
+
+    "prefill": {
+        "name": "{{ order.full_name }}",
+        "contact": "{{ order.phone }}"
+    },
+
+    "theme": { "color": "#8C0032" }
+};
+
+var rzp1 = new Razorpay(options);
+
+document.getElementById('rzp-button1').onclick = function(e){
+    document.getElementById('loading').style.display = "block";
+    rzp1.open();
+    e.preventDefault();
+}
+</script>
+
+{% endblock %}

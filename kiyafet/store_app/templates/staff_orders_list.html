@@ -1,0 +1,191 @@
+{% extends "staff_home.html" %}
+
+{% block content %}
+
+<style>
+    .order-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 25px;
+        margin-bottom: 18px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.07);
+        transition: 0.25s ease;
+        border: 1px solid #f1f1f1;
+    }
+
+    .order-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.10);
+    }
+
+    .order-img {
+        width: 75px;
+        height: 75px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #e7e7e7;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    /* Order Status Badge */
+    .badge-status {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+    .status-placed { background:#eee2ff; color:#5b00a8; }
+    .status-confirmed { background:#d8f3ff; color:#00739c; }
+    .status-shipped { background:#fff2c7; color:#a07900; }
+    .status-delivered { background:#d8ffd9; color:#037a1e; }
+
+    /* ================================
+       CATCHY PAYMENT BADGES (NEW)
+       ================================ */
+    .badge-payment {
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        text-transform: capitalize;
+    }
+
+    /* SUCCESS — PAID */
+    .payment-success {
+        background: #d1ffe0;
+        color: #027a28;
+        border: 1px solid #8af2ad;
+        box-shadow: 0 0 8px rgba(0, 170, 40, 0.25);
+    }
+
+    /* PENDING */
+    .payment-pending {
+        background: #ffe3e3;
+        color: #b30000;
+        border: 1px solid #ffb0b0;
+        box-shadow: 0 0 8px rgba(255, 60, 60, 0.25);
+    }
+
+    /* FAILED */
+    .payment-failed {
+        background: #fff7d6;
+        color: #8a6a00;
+        border: 1px solid #ffe78a;
+        box-shadow: 0 0 8px rgba(255, 205, 0, 0.25);
+    }
+
+    .order-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color:#222;
+    }
+
+    .customer-name {
+        font-weight: 500;
+        color:#333;
+    }
+
+    .view-btn {
+        border-radius: 10px;
+        padding: 7px 18px;
+        font-weight: 500;
+        font-size: 14px;
+    }
+</style>
+
+
+<div class="container mt-4" style="max-width: 1100px;">
+
+    <h2 class="mb-4" style="font-weight:600;">📦 All Orders</h2>
+
+    {% for o in orders %}
+    <div class="order-card">
+
+        <div class="row align-items-center">
+
+            <!-- Product Image -->
+            <div class="col-md-2 text-center">
+                {% with item=o.orderitem_set.first %}
+                    {% if item %}
+                        <img src="{{ item.product.cover_image.url }}" class="order-img">
+                    {% else %}
+                        <img src="https://via.placeholder.com/75" class="order-img">
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <!-- Order Info -->
+            <div class="col-md-5">
+
+                <div class="order-title">Order #{{ o.id }}</div>
+
+                <p class="mb-1 customer-name">{{ o.full_name }}</p>
+                <p class="text-muted mb-1" style="font-size: 13px;">📞 {{ o.phone }}</p>
+
+                <!-- ORDER STATUS -->
+                <span class="badge-status status-{{ o.status }}">
+                    {{ o.get_status_display }}
+                </span>
+
+                <!-- PAYMENT STATUS (Now Catchy & Icon Based) -->
+                <span class="badge-payment payment-{{ o.payment_status|lower }}">
+                    {% if o.payment_status|lower == "success" %}
+                        ✅ Paid
+                    {% elif o.payment_status|lower == "pending" %}
+                        ⏳ Pending
+                    {% elif o.payment_status|lower == "failed" %}
+                        ❌ Failed
+                    {% else %}
+                        {{ o.payment_status }}
+                    {% endif %}
+                </span>
+
+                <p class="text-muted mt-2 mb-0" style="font-size: 13px;">
+                    {{ o.created_at|date:"M d, Y — h:i A" }}
+                </p>
+
+            </div>
+
+            <!-- Amount -->
+            <div class="col-md-3 text-end">
+                <h4 class="text-dark mb-1" style="font-weight:700;">₹{{ o.total_amount }}</h4>
+                <small class="text-muted">Total Amount</small>
+            </div>
+
+            <!-- View Button + Delete Button -->
+<div class="col-md-2 text-end">
+
+    <a href="{% url 'staff_order_detail' o.id %}" 
+       class="btn btn-dark view-btn mb-2 w-100">
+        View Details
+    </a>
+
+    {% if o.payment_status|lower == "pending" or o.payment_status|lower == "failed" %}
+        <form method="POST" 
+              action="{% url 'delete_order' o.id %}"
+              onsubmit="return confirm('Are you sure you want to delete this order?');">
+            {% csrf_token %}
+            <button class="btn btn-danger w-100" style="border-radius:10px;">
+                🗑 Delete
+            </button>
+        </form>
+    {% endif %}
+
+</div>
+
+
+        </div>
+    </div>
+
+    {% empty %}
+        <p class="text-center text-muted mt-5">No orders found.</p>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

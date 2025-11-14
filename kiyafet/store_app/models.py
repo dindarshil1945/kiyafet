@@ -78,3 +78,44 @@ class Address(models.Model):
 
     def __str__(self):
         return f"{self.house}, {self.city}"
+
+class Order(models.Model):
+
+    ORDER_STATUS = (
+        ("placed", "Order Placed"),
+        ("confirmed", "Order Confirmed"),
+        ("shipped", "Shipped"),
+        ("delivered", "Delivered"),
+    )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True)
+    
+    full_name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=15)
+
+    total_amount = models.FloatField()
+    payment_status = models.CharField(max_length=20, default="Pending")
+    payment_id = models.CharField(max_length=200, blank=True, null=True)
+
+    status = models.CharField(max_length=20, choices=ORDER_STATUS, default="placed")
+    
+    # NEW — Tracking information
+    tracking_id = models.CharField(max_length=200, blank=True, null=True)
+    courier_name = models.CharField(max_length=100, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Order #{self.id}"
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True)
+    quantity = models.PositiveIntegerField(default=1)
+    price = models.FloatField()  
+    size = models.CharField(max_length=10, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.product.name if self.product else 'Deleted Product'} x {self.quantity}"
+

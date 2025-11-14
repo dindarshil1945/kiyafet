@@ -1,0 +1,109 @@
+{% extends 'customer_base.html' %}
+
+{% block title %}My Orders — Kiyafet{% endblock %}
+
+{% block content %}
+
+<style>
+    .order-card {
+        border: 1px solid #e3e3e3;
+        border-radius: 12px;
+        padding: 20px;
+        background: #fff;
+        transition: 0.2s ease;
+    }
+    .order-card:hover {
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .status-badge {
+        padding: 5px 10px;
+        font-size: 13px;
+        border-radius: 20px;
+        font-weight: 600;
+    }
+    .status-placed { background:#e8f1ff; color:#0049b7; }
+    .status-confirmed { background:#e6ffea; color:#007e2b; }
+    .status-shipped { background:#fff4d6; color:#b68100; }
+    .status-delivered { background:#e5ffe8; color:#0f8b2d; }
+
+    .order-img {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+    }
+</style>
+
+<div class="container my-5" style="max-width:900px;">
+    <h2 class="mb-4 text-center"
+        style="font-family:'Playfair Display', serif; font-weight:600;">
+        My Orders
+    </h2>
+
+    {% if orders %}
+        {% for order in orders %}
+        <div class="order-card mb-4">
+
+            <!-- Top section -->
+            <div class="d-flex justify-content-between">
+                <div>
+                    <strong style="font-size:18px;">Order #{{ order.id }}</strong><br>
+                    <small class="text-muted">
+                        {{ order.created_at|date:"M d, Y" }}
+                    </small>
+                </div>
+
+                <!-- Status badge -->
+                <div>
+                    {% if order.status == "placed" %}
+                        <span class="status-badge status-placed">Order Placed</span>
+                    {% elif order.status == "confirmed" %}
+                        <span class="status-badge status-confirmed">Confirmed</span>
+                    {% elif order.status == "shipped" %}
+                        <span class="status-badge status-shipped">Shipped</span>
+                    {% elif order.status == "delivered" %}
+                        <span class="status-badge status-delivered">Delivered</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <hr>
+
+            <!-- Product list -->
+            {% for item in order.orderitem_set.all %}
+            <div class="d-flex mb-3 align-items-center">
+                <img src="{{ item.product.cover_image.url }}" class="order-img me-3">
+                <div>
+                    <div style="font-size:17px; font-weight:500;">{{ item.product.name }}</div>
+                    <small class="text-muted">Size: {{ item.size }} | Qty: {{ item.quantity }}</small>
+                </div>
+
+                <div class="ms-auto fw-bold" style="font-size:17px;">
+                    ₹{{ item.price }}
+                </div>
+            </div>
+            {% endfor %}
+
+            <hr>
+
+            <!-- Bottom section: Total + Button -->
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="fw-bold" style="font-size:18px;">
+                    Total: ₹{{ order.total_amount }}
+                </div>
+
+                <a href="{% url 'order_detail' order.id %}"
+                   class="btn btn-dark rounded-pill px-4">
+                    View Order Details
+                </a>
+            </div>
+
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center text-muted">You have no orders yet.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

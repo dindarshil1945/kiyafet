@@ -1,0 +1,141 @@
+{% extends 'customer_base.html' %}
+{% load static %}
+
+{% block title %}Order #{{ order.id }} – Kiyafet{% endblock %}
+
+{% block content %}
+
+<style>
+    .order-card {
+        background: #fff;
+        padding: 25px;
+        border-radius: 14px;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+    }
+    .section-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 22px;
+        font-weight: 600;
+    }
+    .status-step {
+        width: 25%;
+        text-align: center;
+        font-size: 14px;
+        font-weight: 600;
+        color: grey;
+    }
+    .status-active {
+        color: #28a745;
+    }
+    .product-box {
+        padding: 12px;
+        border-radius: 12px;
+        border: 1px solid #eee;
+        margin-bottom: 15px;
+    }
+    .product-img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 10px;
+    }
+</style>
+
+<div class="container my-5" style="max-width:950px;">
+
+    <h2 class="mb-4 text-center" style="font-family:'Playfair Display', serif; font-weight:600;">
+        Order Details — #{{ order.id }}
+    </h2>
+
+    <div class="order-card mb-4">
+
+        <!-- ORDER STATUS PROGRESS BAR -->
+        <h5 class="section-title mb-3">Order Status</h5>
+
+        <div class="d-flex justify-content-between mb-4">
+
+            <div class="status-step {% if order.status in 'placed confirmed shipped delivered' %}status-active{% endif %}">
+                Placed
+            </div>
+
+            <div class="status-step {% if order.status in 'confirmed shipped delivered' %}status-active{% endif %}">
+                Confirmed
+            </div>
+
+            <div class="status-step {% if order.status in 'shipped delivered' %}status-active{% endif %}">
+                Shipped
+            </div>
+
+            <div class="status-step {% if order.status == 'delivered' %}status-active{% endif %}">
+                Delivered
+            </div>
+
+        </div>
+
+        <hr>
+
+        <!-- ORDER ITEMS -->
+        <h5 class="section-title mb-3">Items</h5>
+
+        {% for item in items %}
+        <div class="product-box d-flex align-items-center">
+
+            <img src="{{ item.product.cover_image.url }}" class="product-img me-3">
+
+            <div class="flex-grow-1">
+                <strong>{{ item.product.name }}</strong><br>
+                <small>Size: {{ item.size }}</small><br>
+                <small>Qty: {{ item.quantity }}</small>
+            </div>
+
+            <div class="fw-bold">
+                ₹{{ item.price|floatformat:0 }}
+            </div>
+        </div>
+        {% endfor %}
+
+        <hr>
+
+        <!-- DELIVERY ADDRESS -->
+        <h5 class="section-title mb-3">Delivery Address</h5>
+        <p>
+            <strong>{{ order.full_name }}</strong><br>
+            {{ order.phone }}<br>
+            {{ order.address.house }}, {{ order.address.street }}<br>
+            {{ order.address.city }}, {{ order.address.state }} - {{ order.address.pincode }}<br>
+            {{ order.address.country }}
+        </p>
+
+        <hr>
+
+        <!-- PAYMENT INFO -->
+        <h5 class="section-title mb-3">Payment Details</h5>
+        <p>
+            <strong>Amount Paid:</strong> ₹{{ order.total_amount }} <br>
+            <strong>Payment Status:</strong> {{ order.payment_status }} <br>
+            <strong>Razorpay ID:</strong> {{ order.payment_id }}
+        </p>
+
+        <hr>
+
+        <!-- TRACKING INFO -->
+        <h5 class="section-title mb-3">Tracking Details</h5>
+
+        {% if order.tracking_id %}
+            <p><strong>Tracking ID:</strong> {{ order.tracking_id }}</p>
+            <p><strong>Courier:</strong> {{ order.courier_name }}</p>
+        {% else %}
+            <p class="text-muted">Tracking details will be updated soon.</p>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{% url 'orders_list' %}" class="btn btn-dark px-4 py-2 rounded-pill">
+                Back to My Orders
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
