@@ -1,0 +1,17 @@
+{% extends 'customer_base.html' %}
+
+{% block content %}
+
+<div class="container text-center" style="padding: 80px 0;">
+    <h3 style="font-family:'Playfair Display', serif; color:var(--rose);">
+        Please login to view your account
+    </h3>
+
+    <a href="{% url 'login' %}" 
+       class="btn mt-3 px-4"
+       style="background:var(--rose); color:white; border-radius:30px;">
+        Login
+    </a>
+</div>
+
+{% endblock %}

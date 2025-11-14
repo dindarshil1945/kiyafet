@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect,get_object_or_404
 from django.views import View
 from django.contrib.auth.models import User
 from django.contrib import messages
-from store_app.models import UserProfile,Product,ProductImage,CartItem
+from store_app.models import UserProfile,Product,ProductImage,CartItem,Address
 from django.http import HttpResponse
 from store_app.forms import ProductForm
 from django.contrib.auth import authenticate,login,logout
@@ -291,6 +291,42 @@ class RemoveCartItemView(View):
         messages.success(request, "Item removed from your cart.")
         return redirect('cart_view')
 
+class ProfileView(View):
+    def get(self, request):
+        
+        if not request.user.is_authenticated:
+            return render(request, "login_required.html")
+        
+        profile = UserProfile.objects.get(user=request.user)
+        addresses = Address.objects.filter(user=request.user)
+
+        return render(request, "profile.html", {"profile": profile,"addresses": addresses})
+
+
+class EditProfileView(View):
+    def get(self, request):
+        profile = request.user.userprofile
+        return render(request, "edit_profile.html", {
+            "profile": profile,
+            "user": request.user,
+        })
+
+    def post(self, request):
+        user = request.user
+        profile = user.userprofile
+
+        # Update User model fields
+        user.first_name = request.POST.get("first_name")
+        user.last_name = request.POST.get("last_name")
+        user.email = request.POST.get("email")
+        user.save()
+
+        # Update UserProfile model fields
+        profile.phone = request.POST.get("phone")
+        profile.address = request.POST.get("address")
+        profile.save()
+
+        return redirect("profile")
 
 
 class LogoutView(View):
@@ -298,3 +334,62 @@ class LogoutView(View):
         logout(request)
         messages.success(request,"Logged Out Succesfully")
         return redirect("home")
+
+class AddAddressView(View):
+    def get(self, request):
+        if not request.user.is_authenticated:
+            return redirect("login")
+        return render(request, "add_address.html")
+
+    def post(self, request):
+        if not request.user.is_authenticated:
+            return redirect("login")
+
+        Address.objects.create(
+            user=request.user,
+            full_name=request.POST.get("full_name"),
+            phone=request.POST.get("phone"),
+            house=request.POST.get("house"),
+            street=request.POST.get("street"),
+            city=request.POST.get("city"),
+            state=request.POST.get("state"),
+            pincode=request.POST.get("pincode"),
+            country=request.POST.get("country") or "India",
+        )
+
+        messages.success(request, "Address added successfully!")
+        return redirect("profile")
+
+class EditAddressView(View):
+    def get(self, request, id):
+        if not request.user.is_authenticated:
+            return redirect("login")
+
+        address = get_object_or_404(Address, id=id, user=request.user)
+        return render(request, "edit_address.html", {"address": address})
+
+    def post(self, request, id):
+        if not request.user.is_authenticated:
+            return redirect("login")
+
+        address = get_object_or_404(Address, id=id, user=request.user)
+
+        address.full_name = request.POST.get("full_name")
+        address.phone = request.POST.get("phone")
+        address.house = request.POST.get("house")
+        address.street = request.POST.get("street")
+        address.city = request.POST.get("city")
+        address.state = request.POST.get("state")
+        address.pincode = request.POST.get("pincode")
+        address.country = request.POST.get("country") or "India"
+        address.save()
+
+        messages.success(request, "Address updated successfully!")
+        return redirect("profile")
+
+class DeleteAddressView(View):
+    def get(self, request, id):
+        address = get_object_or_404(Address, id=id, user=request.user)
+        address.delete()
+        messages.success(request, "Address deleted successfully!")
+        return redirect("profile")

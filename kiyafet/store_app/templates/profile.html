@@ -1,0 +1,108 @@
+{% extends 'customer_base.html' %}
+{% load static %}
+
+{% block title %}My Profile — Kiyafet{% endblock %}
+
+{% block content %}
+
+<div class="container" style="max-width: 850px;">
+
+    <h2 class="mb-4 text-center"
+        style="font-family: 'Playfair Display', serif; color: var(--rose); font-weight: 600;">
+        My Profile
+    </h2>
+
+    <!-- Profile Card -->
+    <div class="card border-0 shadow-sm p-4" style="border-radius: 14px;">
+
+        <h5 class="mb-3" style="font-family:'Playfair Display', serif; font-weight:600;">
+            Account Information
+        </h5>
+
+        <div class="row mb-4">
+
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">First Name</label>
+                <div class="fw-semibold">{{ request.user.first_name }}</div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Last Name</label>
+                <div class="fw-semibold">{{ request.user.last_name }}</div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Email</label>
+                <div class="fw-semibold">{{ request.user.email }}</div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Username</label>
+                <div class="fw-semibold">{{ request.user.username }}</div>
+            </div>
+
+            <!-- PHONE DISPLAY -->
+            <div class="col-md-6 mb-3">
+                <label class="text-muted small">Phone</label>
+                <div class="fw-semibold">
+                    {% if profile.phone %}
+                        {{ profile.phone }}
+                    {% else %}
+                        <span class="text-muted">Not added</span>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="text-end">
+            <a href="{% url 'edit_profile' %}" class="btn px-4"
+                style="background:var(--rose); color:white; border-radius:30px;">
+                Edit Profile
+            </a>
+        </div>
+
+    </div>
+
+    <!-- Addresses Card -->
+    <div class="card border-0 shadow-sm p-4 mt-4" style="border-radius: 14px;">
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 style="font-family:'Playfair Display', serif; font-weight:600;">My Addresses</h5>
+
+            <a href="{% url 'add_address' %}" class="btn btn-outline-dark px-3"
+                style="border-radius: 30px;">
+                + Add Address
+            </a>
+        </div>
+
+        {% if addresses %}
+            <div class="list-group">
+
+                {% for a in addresses %}
+                <div class="list-group-item border-0 mb-3 shadow-sm p-3" style="border-radius: 12px;">
+                    <div class="fw-semibold">{{ a.full_name }}</div>
+                    <div class="text-muted small">{{ a.phone }}</div>
+                    <div class="mt-1">{{ a.house }}, {{ a.street }}</div>
+                    <div>{{ a.city }}, {{ a.state }} - {{ a.pincode }}</div>
+
+                    <div class="mt-3 d-flex gap-3">
+                        <a href="{% url 'edit_address' a.id %}" class="text-decoration-none"
+                           style="color: var(--rose); font-weight: 500;">Edit</a>
+
+                        <a href="{% url 'delete_address' a.id %}" class="text-decoration-none text-danger"
+                           style="font-weight: 500;">Delete</a>
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+        {% else %}
+            <p class="text-muted text-center mt-3">No addresses added yet.</p>
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

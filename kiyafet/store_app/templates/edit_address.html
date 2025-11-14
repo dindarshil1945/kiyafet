@@ -1,0 +1,64 @@
+{% extends 'customer_base.html' %}
+
+{% block content %}
+<div class="container my-4" style="max-width: 600px;">
+
+    <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body p-4">
+
+            <h4 class="mb-3 fw-semibold text-center">Edit Address</h4>
+            <hr>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" name="full_name" value="{{ address.full_name }}" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" name="phone" value="{{ address.phone }}" class="form-control" maxlength="15" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">House / Building</label>
+                    <input type="text" name="house" value="{{ address.house }}" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Street / Area</label>
+                    <input type="text" name="street" value="{{ address.street }}" class="form-control" required>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">City</label>
+                        <input type="text" name="city" value="{{ address.city }}" class="form-control" required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">State</label>
+                        <input type="text" name="state" value="{{ address.state }}" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Pincode</label>
+                    <input type="text" name="pincode" value="{{ address.pincode }}" class="form-control" maxlength="10" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Country</label>
+                    <input type="text" name="country" value="{{ address.country }}" class="form-control" required>
+                </div>
+
+                <button class="btn btn-dark w-100 py-2">Update Address</button>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
