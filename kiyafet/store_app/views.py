@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect,get_object_or_404
 from django.views import View
 from django.contrib.auth.models import User
 from django.contrib import messages
-from store_app.models import UserProfile,Product,ProductImage,CartItem,Address,Order,OrderItem
+from store_app.models import UserProfile,Product,ProductImage,CartItem,Address,Order,OrderItem,CATEGORIES
 from django.http import HttpResponse,HttpResponseBadRequest
 from store_app.forms import ProductForm
 from django.contrib.auth import authenticate,login,logout
@@ -292,6 +292,31 @@ class ProductDetailView(View):
         product=Product.objects.get(id=kwargs.get("id"))
         related_products = Product.objects.filter(category=product.category).exclude(id=product.id)[:4]
         return render(request,"product_detail.html",{"product":product,"related_products":related_products})
+
+class AllProductsView(View):
+    def get(self, request):
+
+        search = request.GET.get("search", "")
+        category = request.GET.get("category", "")
+
+        products = Product.objects.all().order_by("-created_at")
+
+        # Search filter
+        if search:
+            products = products.filter(name__icontains=search)
+
+        # Category filter
+        if category:
+            products = products.filter(category=category)
+
+        categories = [c[0] for c in CATEGORIES]
+
+        return render(request, "all_products.html", {
+            "products": products,
+            "search": search,
+            "category": category,
+            "categories": categories,
+        })
 
 #----------------------------------------------------------Add To Cart------------------------------------------------------------------------------
 
