@@ -56,5 +56,10 @@ urlpatterns = [
     path("my-orders/", views.OrdersListView.as_view(), name="orders_list"),
     path("order/<int:order_id>/", views.OrderDetailView.as_view(), name="order_detail"),
 
+    path("forgot-password/", views.ForgotPasswordView.as_view(), name="forgot_password"),
+    path("verify-otp/", views.VerifyOTPView.as_view(), name="verify_otp"),
+    path("reset-password/", views.ResetPasswordView.as_view(), name="reset_password"),
+
+    
     path('logout', views.LogoutView.as_view(), name='logout'),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

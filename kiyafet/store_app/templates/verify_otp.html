@@ -1,0 +1,170 @@
+{% extends "customer_base.html" %}
+{% block content %}
+
+<style>
+    body {
+        background: #f9f4f6;
+    }
+
+    .otp-container {
+        max-width: 450px;
+        margin: 70px auto;
+        background: #ffffff;
+        padding: 35px 30px;
+        border-radius: 16px;
+        box-shadow: 0 6px 25px rgba(0,0,0,0.08);
+        text-align: center;
+        animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .otp-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #8C0032;
+        margin-bottom: 8px;
+    }
+
+    .otp-subtext {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 25px;
+    }
+
+    .otp-boxes {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin: 25px 0;
+    }
+
+    .otp-input {
+        width: 55px;
+        height: 60px;
+        border-radius: 12px;
+        border: 2px solid #ddd;
+        font-size: 22px;
+        text-align: center;
+        font-weight: 600;
+        transition: .2s;
+        background: #fafafa;
+    }
+
+    .otp-input:focus {
+        border-color: #8C0032;
+        outline: none;
+        background: white;
+        box-shadow: 0 0 8px rgba(140, 0, 50, 0.4);
+        transform: scale(1.05);
+    }
+
+    .timer-text {
+        font-size: 15px;
+        color: #8C0032;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+
+    .btn-verify {
+        background: #8C0032;
+        color: white;
+        font-weight: 600;
+        border-radius: 10px;
+        padding: 10px;
+        width: 100%;
+        transition: 0.3s;
+    }
+
+    .btn-verify:hover {
+        background: #700027;
+
+        color: #ffffff;
+    }
+</style>
+
+
+<div class="otp-container">
+
+    <div class="otp-title">Verify OTP</div>
+    <p class="otp-subtext">We’ve sent a 6-digit verification code to your email.</p>
+
+    <form method="POST" id="otpForm">
+        {% csrf_token %}
+
+        <!-- Hidden input to combine full OTP -->
+        <input type="hidden" name="otp" id="full_otp">
+
+        <div class="otp-boxes">
+            {% for i in "123456" %}
+            <input type="text" maxlength="1" class="otp-input" 
+                   id="otp{{ forloop.counter }}" autocomplete="off">
+            {% endfor %}
+        </div>
+
+        <p class="timer-text">
+            OTP expires in: <span id="timer">05:00</span>
+        </p>
+
+        <button type="submit" class="btn btn-verify">Verify OTP</button>
+
+    </form>
+</div>
+
+
+<script>
+    // ===========================
+    // OTP INPUT FIELD BEHAVIOR
+    // ===========================
+    const inputs = document.querySelectorAll(".otp-input");
+
+    inputs.forEach((input, index) => {
+        input.addEventListener("input", () => {
+            if (input.value.length === 1 && index < 5) {
+                inputs[index + 1].focus();
+            }
+            updateFullOTP();
+        });
+
+        input.addEventListener("keydown", (e) => {
+            if (e.key === "Backspace" && input.value === "" && index > 0) {
+                inputs[index - 1].focus();
+            }
+        });
+    });
+
+    function updateFullOTP() {
+        let otp = "";
+        inputs.forEach(inp => otp += inp.value);
+        document.getElementById("full_otp").value = otp;
+    }
+
+
+    // ===========================
+    // COUNTDOWN TIMER (5 minutes)
+    // ===========================
+    let timeLeft = 300; // 5 minutes in seconds
+    const timerDisplay = document.getElementById("timer");
+
+    function updateTimer() {
+        let minutes = Math.floor(timeLeft / 60);
+        let seconds = timeLeft % 60;
+
+        timerDisplay.textContent =
+            `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerDisplay.textContent = "Expired";
+        }
+
+        timeLeft--;
+    }
+
+    const timerInterval = setInterval(updateTimer, 1000);
+</script>
+
+{% endblock %}

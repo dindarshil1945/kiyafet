@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect,get_object_or_404
 from django.views import View
 from django.contrib.auth.models import User
 from django.contrib import messages
-from store_app.models import UserProfile,Product,ProductImage,CartItem,Address,Order,OrderItem,CATEGORIES
+from store_app.models import UserProfile,Product,ProductImage,CartItem,Address,Order,OrderItem,CATEGORIES,PasswordResetOTP
 from django.http import HttpResponse,HttpResponseBadRequest
 from store_app.forms import ProductForm
 from django.contrib.auth import authenticate,login,logout
@@ -11,6 +11,10 @@ from django.conf import settings
 import razorpay
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+import random
+from django.db.models import Sum
+from django.db import models
+
 
 
 #-----------------------------------------------------Register and login---------------------------------------------------------------
@@ -95,7 +99,7 @@ class LoginView(View):
 #---------------------------------------------Staff Home and Dashboard----------------------------------------------------------------
         
 class StaffHomeView(View):
-    def get(self,request):
+    def get(self, request):
         # Check if user is logged in
         if not request.user.is_authenticated:
             return redirect('login')
@@ -105,7 +109,22 @@ class StaffHomeView(View):
         if not user_profile or user_profile.user_type != 'staff':
             messages.error(request, "You don't have permission to access this page.")
             return redirect('login')
-        return render(request,"staff_home.html")
+
+        # ----- COUNTS -----
+        product_count = Product.objects.count()
+        order_count = Order.objects.count()
+        customer_count = UserProfile.objects.filter(user_type="customer").count()
+        revenue = Order.objects.filter(payment_status="Paid").aggregate(total=models.Sum("total_amount"))["total"] or 0
+
+        context = {
+            "product_count": product_count,
+            "order_count": order_count,
+            "customer_count": customer_count,
+            "revenue": revenue,
+        }
+
+        return render(request, "staff_home.html", context)
+
 
 class AddProductView(View):
     def get(self, request):
@@ -239,19 +258,147 @@ class StaffOrderDetailView(View):
             "items": items
         })
 
+# class UpdateOrderView(View):
+#     def post(self, request, order_id):
+
+#         order = get_object_or_404(Order, id=order_id)
+
+#         order.status = request.POST.get("status")
+#         order.tracking_id = request.POST.get("tracking_id")
+#         order.courier_name = request.POST.get("courier_name")
+
+#         order.save()
+#         messages.success(request, "Order updated successfully!")
+
+#         return redirect("staff_orders")
 class UpdateOrderView(View):
     def post(self, request, order_id):
 
         order = get_object_or_404(Order, id=order_id)
 
+        previous_status = order.status  # store old status
+
         order.status = request.POST.get("status")
         order.tracking_id = request.POST.get("tracking_id")
         order.courier_name = request.POST.get("courier_name")
-
         order.save()
-        messages.success(request, "Order updated successfully!")
 
+        # ===========================
+        #  COMMON ORDER UPDATE EMAIL
+        # ===========================
+        items = order.orderitem_set.all()
+
+        item_details = "\n".join([
+            f"- {item.product.name} | Size: {item.size} | Qty: {item.quantity} | ₹{item.price}"
+            for item in items
+        ])
+
+        # If not delivered → normal update mail
+        if order.status.lower() != "delivered":
+            email_subject = f"Kiyafet – Your Order #{order.id} is now {order.status.capitalize()}"
+
+            email_message = f"""
+Hi {order.full_name},
+
+Your order status has been updated! 🎉
+
+---------------------------
+ORDER UPDATE
+---------------------------
+Order ID: {order.id}
+New Status: {order.status.capitalize()}
+
+"""
+
+            if order.status.lower() in ["shipped", "out for delivery"]:
+                email_message += f"""
+Tracking ID : {order.tracking_id if order.tracking_id else 'Not Provided'}
+Courier      : {order.courier_name if order.courier_name else 'Not Provided'}
+
+"""
+
+            email_message += f"""
+---------------------------
+ITEMS IN YOUR ORDER
+---------------------------
+{item_details}
+
+---------------------------
+DELIVERY ADDRESS
+---------------------------
+{order.address.full_name}
+{order.address.house}, {order.address.street}
+{order.address.city}, {order.address.state} - {order.address.pincode}
+Phone: {order.address.phone}
+
+---------------------------
+PAYMENT DETAILS
+---------------------------
+Amount Paid: ₹{order.total_amount}
+Payment Status: {order.payment_status}
+
+We will continue updating you with every step.  
+Thank you for shopping at Kiyafet 🤍
+
+Warm regards,  
+Team Kiyafet
+"""
+        else:
+            # =======================================
+            #     SPECIAL EMAIL – ORDER DELIVERED
+            # =======================================
+            email_subject = f"Kiyafet – Your Order #{order.id} Has Been Delivered 🤍"
+
+            email_message = f"""
+Hi {order.full_name},
+
+Great news — your order has been successfully delivered! 🎉  
+We hope it brings a smile to your face and adds elegance to your wardrobe.
+
+---------------------------
+DELIVERED ORDER DETAILS
+---------------------------
+Order ID: {order.id}
+Total Paid: ₹{order.total_amount}
+
+---------------------------
+ITEMS YOU RECEIVED
+---------------------------
+{item_details}
+
+---------------------------
+DELIVERY ADDRESS
+---------------------------
+{order.address.full_name}
+{order.address.house}, {order.address.street}
+{order.address.city}, {order.address.state} - {order.address.pincode}
+Phone: {order.address.phone}
+
+We would love to hear your experience!  
+Feel free to leave a review or share your look with us on Instagram 💖
+
+Thank you for choosing Kiyafet — your trust means the world to us.  
+Stay elegant, stay confident ✨
+
+Warmest regards,  
+Team Kiyafet 🤍
+"""
+
+        # Send final email
+        try:
+            send_mail(
+                subject=email_subject,
+                message=email_message,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[order.user.email],
+            )
+        except:
+            pass  # email sending should never interrupt flow
+
+        messages.success(request, "Order updated & email sent to customer!")
         return redirect("staff_orders")
+
+
     
 class DeleteOrderView(View):
     def post(self, request, id):
@@ -582,11 +729,59 @@ class RazorpayPayView(View):
             "razorpay_key": settings.RAZORPAY_KEY_ID,
         })
 
+# @method_decorator(csrf_exempt, name='dispatch')
+# class PaymentConfirmView(View):
+#     def post(self, request, *args, **kwargs):
+
+#         # Razorpay response fields
+#         razorpay_payment_id = request.POST.get('razorpay_payment_id')
+#         razorpay_order_id = request.POST.get('razorpay_order_id')
+#         razorpay_signature = request.POST.get('razorpay_signature')
+
+#         order_id = request.GET.get("order_id")
+
+#         if not (razorpay_payment_id and razorpay_order_id and razorpay_signature):
+#             return HttpResponseBadRequest("Payment verification failed.")
+
+#         # Find your order
+#         try:
+#             order = Order.objects.get(id=order_id, user=request.user)
+#         except Order.DoesNotExist:
+#             messages.error(request, "Order not found.")
+#             return redirect("cart_view")
+
+#         # Razorpay client for verification
+#         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+#         # Verify payment signature
+#         try:
+#             client.utility.verify_payment_signature({
+#                 'razorpay_order_id': razorpay_order_id,
+#                 'razorpay_payment_id': razorpay_payment_id,
+#                 'razorpay_signature': razorpay_signature
+#             })
+#         except:
+#             messages.error(request, "Payment verification failed.")
+#             return redirect("cart_view")
+
+#         # SUCCESS → Update order
+#         order.payment_status = "Paid"
+#         order.payment_id = razorpay_payment_id
+#         order.status = "confirmed"
+#         order.save()
+
+#         # Clear cart after payment
+#         CartItem.objects.filter(user=request.user).delete()
+
+#         return render(request, "payment_success.html", {"order": order})
+
+#     # Razorpay sometimes sends GET request — handle safely
+#     def get(self, request):
+#         return redirect("home")
 @method_decorator(csrf_exempt, name='dispatch')
 class PaymentConfirmView(View):
     def post(self, request, *args, **kwargs):
 
-        # Razorpay response fields
         razorpay_payment_id = request.POST.get('razorpay_payment_id')
         razorpay_order_id = request.POST.get('razorpay_order_id')
         razorpay_signature = request.POST.get('razorpay_signature')
@@ -596,17 +791,15 @@ class PaymentConfirmView(View):
         if not (razorpay_payment_id and razorpay_order_id and razorpay_signature):
             return HttpResponseBadRequest("Payment verification failed.")
 
-        # Find your order
         try:
             order = Order.objects.get(id=order_id, user=request.user)
         except Order.DoesNotExist:
             messages.error(request, "Order not found.")
             return redirect("cart_view")
 
-        # Razorpay client for verification
         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
-        # Verify payment signature
+        # Verify signature
         try:
             client.utility.verify_payment_signature({
                 'razorpay_order_id': razorpay_order_id,
@@ -617,18 +810,73 @@ class PaymentConfirmView(View):
             messages.error(request, "Payment verification failed.")
             return redirect("cart_view")
 
-        # SUCCESS → Update order
+        # SUCCESS
         order.payment_status = "Paid"
         order.payment_id = razorpay_payment_id
         order.status = "confirmed"
         order.save()
 
-        # Clear cart after payment
+        # Clear cart
         CartItem.objects.filter(user=request.user).delete()
+
+        # ==========================================================
+        #  SEND ORDER CONFIRMATION EMAIL TO CUSTOMER
+        # ==========================================================
+
+        items = order.orderitem_set.all()
+        item_details = "\n".join(
+            [f"- {item.product.name} | Size: {item.size} | Qty: {item.quantity} | ₹{item.price}" 
+             for item in items]
+        )
+
+        email_subject = "Kiyafet – Payment Successful & Order Confirmed!"
+        email_message = f"""
+Hi {order.full_name},
+
+Your payment was successful! 🎉  
+Thank you for shopping with Kiyafet.
+
+---------------------------
+ORDER DETAILS
+---------------------------
+Order ID: {order.id}
+Payment ID: {order.payment_id}
+Total Amount: ₹{order.total_amount}
+Status: Order Confirmed
+
+---------------------------
+ITEMS
+---------------------------
+{item_details}
+
+---------------------------
+DELIVERY ADDRESS
+---------------------------
+{order.address.full_name}
+{order.address.house}, {order.address.street}
+{order.address.city}, {order.address.state} - {order.address.pincode}
+Phone: {order.address.phone}
+
+We will notify you when your order is shipped!
+
+With Love,  
+Team Kiyafet 🤍
+"""
+
+        try:
+            send_mail(
+                subject=email_subject,
+                message=email_message,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[order.user.email],
+            )
+        except:
+            pass  # avoid breaking flow even if email fails
+
+        # ==========================================================
 
         return render(request, "payment_success.html", {"order": order})
 
-    # Razorpay sometimes sends GET request — handle safely
     def get(self, request):
         return redirect("home")
 
@@ -653,6 +901,125 @@ class OrderDetailView(View):
             "order": order,
             "items": order_items,
         })
+
+#-------------------------------------------------------------------Forgot password-----------------------------------------------------
+
+
+class ForgotPasswordView(View):
+    def get(self, request):
+        return render(request, "forgot_password.html")
+
+    def post(self, request):
+        email = request.POST.get("email")
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            messages.error(request, "No account found with this email.")
+            return redirect("forgot_password")
+
+        # Generate OTP
+        otp = str(random.randint(100000, 999999))
+
+        # Save OTP
+        PasswordResetOTP.objects.create(user=user, otp=otp)
+
+        # Send email
+        send_mail(
+            subject="Your Password Reset OTP",
+            message=f"Your Kiyafet OTP is {otp}. Valid for 5 minutes.",
+            from_email=None,
+            recipient_list=[email],
+        )
+
+        request.session["reset_email"] = email
+        messages.success(request, "OTP sent to your email.")
+        return redirect("verify_otp")
+
+class VerifyOTPView(View):
+    def get(self, request):
+        return render(request, "verify_otp.html")
+
+    def post(self, request):
+        email = request.session.get("reset_email")
+        user = User.objects.get(email=email)
+
+        entered_otp = request.POST.get("otp")
+
+        # Get latest OTP for the user
+        otp_obj = PasswordResetOTP.objects.filter(user=user).last()
+
+        if not otp_obj or not otp_obj.is_valid():
+            messages.error(request, "OTP expired. Please request again.")
+            return redirect("forgot_password")
+
+        if entered_otp != otp_obj.otp:
+            messages.error(request, "Invalid OTP.")
+            return redirect("verify_otp")
+
+        # OTP Valid
+        request.session["otp_verified"] = True
+        return redirect("reset_password")
+
+class ResetPasswordView(View):
+    def get(self, request):
+        if not request.session.get("otp_verified"):
+            return redirect("forgot_password")
+        return render(request, "reset_password.html")
+
+    def post(self, request):
+        email = request.session.get("reset_email")
+        user = User.objects.get(email=email)
+
+        password = request.POST.get("password")
+        confirm = request.POST.get("confirm")
+
+        if password != confirm:
+            messages.error(request, "Passwords do not match.")
+            return redirect("reset_password")
+
+        user.set_password(password)
+        user.save()
+
+        # ===============================
+        # SEND PASSWORD RESET CONFIRMATION EMAIL
+        # ===============================
+        subject = "Your Kiyafet Password Has Been Reset"
+        message = f"""
+Hi {{ user.username }},
+
+Your password has been successfully reset.  
+You can now log in to your Kiyafet account using your new password.
+
+For your safety, here's a quick reminder:
+- Never share your password or OTP with anyone.
+- If you didn’t request this password change, please contact our support immediately.
+
+Thank you for being a valued part of Kiyafet.  
+Stay secure, stay stylish! ✨
+
+With love,  
+Team Kiyafet 🤍
+
+"""
+
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.EMAIL_HOST_USER,
+                recipient_list=[user.email],
+            )
+        except:
+            pass  # Do not interrupt flow if email fails
+
+        # Clear session
+        request.session.flush()
+
+        messages.success(request, "Password reseted successfully! You can now login.")
+        return redirect("login")
+
+
 
 class LogoutView(View):
     def get(self,request):
