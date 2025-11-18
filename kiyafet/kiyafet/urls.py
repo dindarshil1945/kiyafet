@@ -38,6 +38,7 @@ urlpatterns = [
 
     path('', views.CustomerHomePage.as_view(), name='home'),
     path('product/view/<int:id>', views.ProductDetailView.as_view(), name='product_detail_view'),
+    path('about', views.AboutKiyafet.as_view(), name='about'),
     path("products/all", views.AllProductsView.as_view(), name="all_products"),
     path('cart/add/<int:id>',views.AddToCartView.as_view(), name='add_to_cart'),
     path("cart/view", views.CartView.as_view(), name="cart_view"),

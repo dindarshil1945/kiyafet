@@ -1,0 +1,166 @@
+{% extends 'customer_base.html' %}
+{% load static %}
+
+{% block title %}About Kiyafet — Our Story{% endblock %}
+
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="hero-story"
+    style="padding: 120px 0; background: linear-gradient(180deg, #ffe8f0, #ffffff);">
+  <div class="container text-center">
+    <h1 style="font-family:'Playfair Display', serif; color: var(--rose); font-size:3rem; font-weight:600;">
+      The Story of Kiyafet
+    </h1>
+    <p class="mt-3 mx-auto" 
+       style="max-width:700px; font-size:1.1rem; color:#555; line-height:1.8;">
+      A journey born between two friends — fueled by passion, creativity, and a dream that began on Instagram.
+    </p>
+  </div>
+</section>
+
+
+<!-- STORY INTRO -->
+<section style="padding: 90px 0;">
+  <div class="container">
+    <div class="row align-items-center g-5">
+
+      <!-- Image -->
+      <div class="col-md-6 text-center">
+        <img src="{% static 'logo.png' %}" alt="Kiyafet Story"
+             class="img-fluid rounded shadow"
+             style="max-height:420px; object-fit:cover;">
+      </div>
+
+      <!-- Text -->
+      <div class="col-md-6">
+        <h2 style="font-family:'Playfair Display', serif; color: var(--rose); font-size:2rem;">
+          How Kiyafet Began
+        </h2>
+        
+        <p class="mt-3" style="color:#555; font-size:1.1rem; line-height:1.9;">
+          Kiyafet was founded by two friends who shared a deep passion for fashion, design, and the excitement of building something meaningful together. What began as casual conversations between them soon turned into a vision — a vision to create a brand that blends modern Indian elegance with thoughtful craftsmanship.
+        </p>
+        
+        <p class="mt-3" style="color:#555; font-size:1.1rem; line-height:1.9;">
+          With limited resources but limitless passion, they began their journey in the most authentic way — by launching an Instagram page in early 2025. From the very first post, they aimed to create styles that feel expressive, comfortable, and personal.
+        </p>
+
+        <p class="mt-3" style="color:#555; font-size:1.1rem; line-height:1.9;">
+          What started with two friends and a shared dream has now grown into a brand supported by a community that believes in simplicity, elegance, and individuality. Kiyafet is more than fashion — it is a story stitched with passion and friendship.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- MISSION / VALUES -->
+<section style="padding:100px 0; background:#faf9f9;">
+  <div class="container">
+
+    <div class="text-center mb-5">
+      <h2 style="font-family:'Playfair Display', serif; color:var(--rose); font-size:2rem;">
+        Our Philosophy
+      </h2>
+      <p class="text-muted" style="max-width:650px; margin:auto; font-size:1rem;">
+        Kiyafet is built on the belief that fashion should be expressive, effortless, and rooted in authenticity.
+      </p>
+    </div>
+
+    <div class="row g-4">
+
+      <div class="col-md-4">
+        <div class="p-4 rounded shadow-sm h-100" style="background:white;">
+          <h5 class="fw-semibold" style="color:var(--rose);">Thoughtful Design</h5>
+          <p class="text-muted mt-2">
+            Every piece is carefully crafted to reflect the perfect balance of elegance and comfort.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="p-4 rounded shadow-sm h-100" style="background:white;">
+          <h5 class="fw-semibold" style="color:var(--rose);">Modern Indian Identity</h5>
+          <p class="text-muted mt-2">
+            Our designs merge contemporary aesthetics with subtle cultural influences.
+          </p>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="p-4 rounded shadow-sm h-100" style="background:white;">
+          <h5 class="fw-semibold" style="color:var(--rose);">Built Around You</h5>
+          <p class="text-muted mt-2">
+            From our first Instagram follower to our latest customer — you shape our journey.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
+<!-- TIMELINE SECTION -->
+<section style="padding:100px 0;">
+  <div class="container">
+
+    <h2 class="text-center mb-5"
+        style="font-family:'Playfair Display',serif; color:var(--rose); font-size:2rem;">
+      Our Journey
+    </h2>
+
+    <div class="timeline">
+
+      <div class="timeline-item">
+        <h5 class="fw-semibold" style="color:var(--rose);">2024 — The Spark</h5>
+        <p class="text-muted">
+          Two friends discovered their shared passion for fashion and entrepreneurship.
+        </p>
+      </div>
+
+      <div class="timeline-item">
+        <h5 class="fw-semibold" style="color:var(--rose);">Early 2025 — Kiyafet Is Born</h5>
+        <p class="text-muted">
+          Kiyafet begins as an Instagram page — simple, raw, and full of potential.
+        </p>
+      </div>
+
+      <div class="timeline-item">
+        <h5 class="fw-semibold" style="color:var(--rose);">Mid 2025 — First Collection</h5>
+        <p class="text-muted">
+          Our first styles go live, offering a blend of minimalism and comfort.
+        </p>
+      </div>
+
+      <div class="timeline-item">
+        <h5 class="fw-semibold" style="color:var(--rose);">Today — The Journey Continues</h5>
+        <p class="text-muted">
+          Kiyafet grows with every design, every idea, and every person who becomes part of our story.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
+<!-- CUSTOM CSS -->
+<style>
+.timeline {
+  border-left: 3px solid var(--rose);
+  padding-left: 30px;
+}
+.timeline-item {
+  margin-bottom: 40px;
+}
+.timeline-item h5 {
+  margin-bottom: 5px;
+}
+</style>
+
+{% endblock %}

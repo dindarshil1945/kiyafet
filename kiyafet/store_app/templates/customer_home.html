@@ -458,11 +458,11 @@
           </li>
 
           <!-- Search -->
-          <li class="nav-item">
+          <!-- <li class="nav-item">
             <a href="#" class="nav-link d-flex align-items-center">
               <i class="bi bi-search" style="font-size:1.3rem;"></i>
             </a>
-          </li>
+          </li> -->
         </ul>
       </div>
     </div>
@@ -473,7 +473,7 @@
     <div>
       <h1>Muted Luxury — Quietly Curated</h1>
       <p>Seasonal edits crafted for the modern woman.</p>
-      <a href="#" class="btn-cta me-2">Shop Now</a>
+      <a href="{% url 'all_products' %}" class="btn-cta me-2">Shop Now</a>
       <a href="#featured" class="btn btn-outline-dark rounded-pill px-4 py-2">Explore</a>
     </div>
   </header>
@@ -548,16 +548,22 @@
         <!-- Right: Text -->
         <div class="col-md-7">
           <h3 style="font-family:'Playfair Display',serif; color:var(--rose); font-size:2rem; margin-bottom:1rem;">
-            Crafted with Grace
+            Crafted with Purpose
           </h3>
+
           <p style="color:#555; font-size:1.1rem; line-height:1.8; max-width:580px;">
-            <strong>Kiyafet</strong> celebrates Indian craftsmanship with contemporary design sensibilities.
-            Each piece is thoughtfully created to blend comfort, artistry, and confidence —
-            reflecting your story of elegance and individuality.
-            Experience muted luxury redefined for the modern woman.
+            <strong>Kiyafet</strong> began as a dream shared between two friends inspired by fashion,
+            creativity, and the desire to build something meaningful. What started as a small Instagram
+            page in 2025 has grown into a brand that blends contemporary style with the subtle elegance
+            of Indian design.
+            Every piece is thoughtfully made to reflect confidence, individuality, and effortless charm.
           </p>
-          <a href="#" class="btn btn-outline-rose mt-4 px-4 py-2">Discover More</a>
+
+          <a href="{% url 'about' %}" class="btn btn-outline-rose mt-4 px-4 py-2">
+            Discover More
+          </a>
         </div>
+
       </div>
     </div>
   </section>

@@ -237,9 +237,21 @@ class StaffOrderListView(View):
         if not user_profile or user_profile.user_type != "staff":
             return redirect("login")
 
+        # --- FILTER LOGIC ---
+        status = request.GET.get("status")  # get status param from URL
+        
         orders = Order.objects.all().order_by("-created_at")
 
-        return render(request, "staff_orders_list.html", {"orders": orders})
+        if status and status != "all":
+            orders = orders.filter(status=status)
+
+        context = {
+            "orders": orders,
+            "selected_status": status   # to highlight active button
+        }
+
+        return render(request, "staff_orders_list.html", context)
+
 
 class StaffOrderDetailView(View):
     def get(self, request, order_id):
@@ -1026,3 +1038,7 @@ class LogoutView(View):
         logout(request)
         messages.success(request,"Logged Out Succesfully")
         return redirect("home")
+    
+class AboutKiyafet(View):
+    def get(self,request):
+        return render(request,"about_kiyafet.html")
